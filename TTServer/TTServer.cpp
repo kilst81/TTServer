@@ -149,7 +149,7 @@ DWORD WINAPI makeThread(LPVOID hIOCP)
 	HANDLE threadHandler = *((HANDLE *)hIOCP);
 	DWORD receiveBytes;
 	DWORD sendBytes;
-	DWORD completionKey;
+	ULONGLONG completionKey;
 	DWORD flags;
 	struct SOCKETINFO *eventSocket;
 	while (1)
