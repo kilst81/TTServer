@@ -13,17 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="flatbuffers">
+      <UniqueIdentifier>{544cc810-9c25-4022-abca-65c6daf657d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="protocol">
+      <UniqueIdentifier>{e5f11ba0-5e0f-41b1-8f60-7d2fc0052d72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TTNet">
+      <UniqueIdentifier>{fafc4471-a64a-4cde-bfa5-07eefe6aed53}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -32,5 +33,58 @@
     <ClCompile Include="TTServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TTNet\TTNet.h">
+      <Filter>TTNet</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol\btc_battle_generated.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol\btc_login_generated.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\base.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\code_generators.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\flatbuffers.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\flatc.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\flexbuffers.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\grpc.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\hash.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\idl.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\minireflect.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\reflection.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\reflection_generated.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\registry.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\stl_emulation.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="flatbuffers\util.h">
+      <Filter>flatbuffers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

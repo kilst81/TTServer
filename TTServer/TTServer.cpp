@@ -12,20 +12,26 @@ WIN recv()&send    : 데이터 읽고쓰기
 WIN closesocket    : 소켓종료
 */
 
+
 #include "stdafx.h"
+
+
+#include "TTNet/TTNet.h"
+
 #include <winsock2.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#define MAX_BUFFER        1024
-#define SERVER_PORT        3500
+// #define MAX_BUFFER			1024
+#define SERVER_PORT			3500
+
 
 struct SOCKETINFO
 {
 	WSAOVERLAPPED overlapped;
 	WSABUF dataBuffer;
 	SOCKET socket;
-	char messageBuffer[MAX_BUFFER];
+	char messageBuffer[TTNet::PACKET_SIZE_BUFFER];
 	int receiveBytes;
 	int sendBytes;
 };
@@ -118,7 +124,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		socketInfo->socket = clientSocket;
 		socketInfo->receiveBytes = 0;
 		socketInfo->sendBytes = 0;
-		socketInfo->dataBuffer.len = MAX_BUFFER;
+		socketInfo->dataBuffer.len = TTNet::PACKET_SIZE_BUFFER;
 		socketInfo->dataBuffer.buf = socketInfo->messageBuffer;
 		flags = 0;
 
@@ -151,7 +157,9 @@ DWORD WINAPI makeThread(LPVOID hIOCP)
 	DWORD sendBytes;
 	ULONGLONG completionKey;
 	DWORD flags;
+
 	struct SOCKETINFO *eventSocket;
+
 	while (1)
 	{
 		// 입출력 완료 대기
@@ -173,7 +181,92 @@ DWORD WINAPI makeThread(LPVOID hIOCP)
 		}
 		else
 		{
-			printf("TRACE - Receive message : %s (%d bytes)\n", eventSocket->dataBuffer.buf, eventSocket->dataBuffer.len);
+			TT_PacketHead* packet_head = (TT_PacketHead*)eventSocket->dataBuffer.buf;
+
+			// printf("TRACE - Recv message : %s (%d bytes)\n", eventSocket->dataBuffer.buf, eventSocket->dataBuffer.len);
+			printf("TRACE - Recv message : %d (%d bytes)\n", packet_head->protocol, eventSocket->dataBuffer.len);
+
+			TTNet net;
+			bool bPacket = true;
+
+			switch ((proto_battle::PROTOCOL)packet_head->protocol) {
+			case proto_battle::PROTOCOL::PING:
+				{
+					net.makePacketAck((uint16_t)proto_battle::PROTOCOL::PONG);
+				}
+				break;
+
+			case proto_battle::PROTOCOL::LOGIN:
+				{
+					auto req = flatbuffers::GetRoot<proto_battle::packet::LOGIN_Req>(&eventSocket->messageBuffer[TTNet::PACKET_SIZE_HEADER]);
+					printf("user_token : %s\n", req->user_token()->c_str());
+
+					flatbuffers::FlatBufferBuilder fbb_body;
+					std::string make_nick = "coldblaze ";
+					make_nick += req->user_token()->c_str();
+
+					auto user_nick = fbb_body.CreateString(make_nick.c_str());
+
+					proto_battle::packet::LOGIN_AckBuilder pbb_body(fbb_body);
+					pbb_body.add_user_nick(user_nick);
+
+					fbb_body.Finish(pbb_body.Finish());
+
+					net.makePacketAck((uint16_t)proto_battle::PROTOCOL::LOGIN, fbb_body.GetBufferPointer(), fbb_body.GetSize());
+				}
+				break;
+
+			case proto_battle::PROTOCOL::LOGOUT:
+				{
+					auto req = flatbuffers::GetRoot<proto_battle::packet::LOGOUT_Req>(&eventSocket->messageBuffer[TTNet::PACKET_SIZE_HEADER]);
+					printf("test1 : %d\n", req->test1());
+					printf("test2 : %d\n", req->test2());
+
+					flatbuffers::FlatBufferBuilder fbb_body;
+
+					proto_battle::packet::LOGOUT_AckBuilder pbb_body(fbb_body);
+					pbb_body.add_test1(1111);
+					pbb_body.add_test2(2222);
+					pbb_body.add_test3(3333);
+					pbb_body.add_test4(4444);
+
+					fbb_body.Finish(pbb_body.Finish());
+
+					net.makePacketAck((uint16_t)proto_battle::PROTOCOL::LOGOUT, fbb_body.GetBufferPointer(), fbb_body.GetSize());
+				}
+				break;
+
+			case proto_battle::PROTOCOL::DATA:
+				{
+					auto req = flatbuffers::GetRoot<proto_battle::packet::DATA_Req>(&eventSocket->messageBuffer[TTNet::PACKET_SIZE_HEADER]);
+					printf("ubyte_list size : %d\n", req->ubyte_list()->size());
+
+					flatbuffers::FlatBufferBuilder fbb_body;
+
+					std::vector<uint8_t> byte_list;
+					for (int nI = 0; nI < req->ubyte_list()->size(); ++nI) {
+						byte_list.push_back(req->ubyte_list()->Get(nI));
+					}
+
+					auto vec = fbb_body.CreateVector(byte_list);
+
+					proto_battle::packet::DATA_AckBuilder pbb_body(fbb_body);
+					pbb_body.add_room_idx(1);
+					pbb_body.add_sender_uid(1234);
+					pbb_body.add_ubyte_list(vec);
+
+					fbb_body.Finish(pbb_body.Finish());
+
+					net.makePacketAck((uint16_t)proto_battle::PROTOCOL::DATA, fbb_body.GetBufferPointer(), fbb_body.GetSize());
+				}
+				break;
+
+			default:
+				printf("Wrong Protocol : Value(%d)\n", packet_head->protocol);
+				bPacket = false;
+			}
+
+			if (bPacket) memcpy_s(eventSocket->messageBuffer, net.getPacketLength(), net.getPacketBuffer(), net.getPacketLength());
 
 			if (WSASend(eventSocket->socket, &(eventSocket->dataBuffer), 1, &sendBytes, 0, NULL, NULL) == SOCKET_ERROR)
 			{
@@ -185,10 +278,10 @@ DWORD WINAPI makeThread(LPVOID hIOCP)
 
 			printf("TRACE - Send message : %s (%d bytes)\n", eventSocket->dataBuffer.buf, eventSocket->dataBuffer.len);
 
-			memset(eventSocket->messageBuffer, 0x00, MAX_BUFFER);
+			memset(eventSocket->messageBuffer, 0x00, TTNet::PACKET_SIZE_BUFFER);
 			eventSocket->receiveBytes = 0;
 			eventSocket->sendBytes = 0;
-			eventSocket->dataBuffer.len = MAX_BUFFER;
+			eventSocket->dataBuffer.len = TTNet::PACKET_SIZE_BUFFER;
 			eventSocket->dataBuffer.buf = eventSocket->messageBuffer;
 			flags = 0;
 
